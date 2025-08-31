@@ -1,0 +1,29 @@
+# GitHub Sponsors, Open Collective, Patreon, etc.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# GitHub Sponsors
+github: [yorbuachi72]
+
+# Open Collective
+# open_collective: valora
+
+# Patreon
+# patreon: valora
+
+# Ko-fi
+# ko_fi: valora
+
+# Tidelift
+# tidelift: npm/valora
+
+# Community Bridge
+# community_bridge: valora
+
+# Buy Me a Coffee
+# buy_me_a_coffee: valora
+
+# Custom sponsorship URLs
+custom: [
+  "https://www.paypal.me/valora-project",
+  "https://ko-fi.com/valora"
+]

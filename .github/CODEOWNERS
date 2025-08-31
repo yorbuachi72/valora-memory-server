@@ -1,0 +1,47 @@
+# Code Ownership and Review Requirements
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners (must review all changes)
+* @yorbuachi72
+
+# Security-related files (require security review)
+.github/SECURITY.md @yorbuachi72
+src/security/ @yorbuachi72
+src/api/auth.routes.ts @yorbuachi72
+src/utils/encryption.ts @yorbuachi72
+
+# Core infrastructure
+Dockerfile @yorbuachi72
+docker-compose*.yml @yorbuachi72
+package.json @yorbuachi72
+tsconfig.json @yorbuachi72
+
+# Database and storage
+src/database/ @yorbuachi72
+src/storage/ @yorbuachi72
+
+# AI/ML components
+src/retrieval/ @yorbuachi72
+src/tagging/ @yorbuachi72
+
+# API and integrations
+src/api/ @yorbuachi72
+src/integrations/ @yorbuachi72
+
+# CLI and user interface
+src/cli/ @yorbuachi72
+src/chat/ @yorbuachi72
+
+# Documentation
+README.md @yorbuachi72
+docs/ @yorbuachi72
+.github/ @yorbuachi72
+
+# Configuration and scripts
+scripts/ @yorbuachi72
+nginx/ @yorbuachi72
+
+# Test files
+**/*.test.ts @yorbuachi72
+**/*.spec.ts @yorbuachi72
+jest.config.* @yorbuachi72
