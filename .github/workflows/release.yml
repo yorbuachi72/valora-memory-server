@@ -61,8 +61,7 @@ jobs:
         id: changelog
         uses: tj-actions/git-cliff@v1
         with:
-          configuration: cliff.toml
-          args: --verbose --latest --strip header
+          args: --config cliff.toml --verbose --latest --strip header
         env:
           OUTPUT: CHANGELOG.md
 
@@ -155,7 +154,7 @@ jobs:
             release_metrics.txt
 
       - name: 🎉 Notify on success
-        if: success() && env.SLACK_WEBHOOK_URL != null
+        if: success()
         uses: 8398a7/action-slack@v3
         with:
           status: success
@@ -164,7 +163,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: ⚠️ Notify on failure
-        if: failure() && env.SLACK_WEBHOOK_URL != null
+        if: failure()
         uses: 8398a7/action-slack@v3
         with:
           status: failure
