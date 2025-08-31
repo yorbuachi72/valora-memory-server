@@ -50,12 +50,14 @@ class EncryptedFileAdapter {
       if (!encryptedData) return null;
       const decryptedData = decrypt(encryptedData, this.#secret);
       return JSON.parse(decryptedData) as DbData;
-    } catch (e: any) {
-      if (e.code === 'ENOENT') {
+    } catch (e: unknown) {
+      const error = e as NodeJS.ErrnoException;
+      if (error.code === 'ENOENT') {
         return null;
       }
       // Provide a more specific error for decryption failures
-      if (e.message.includes('Unsupported state or unable to authenticate data')) {
+      if (error.message?.includes('Unsupported state or unable to authenticate data')) {
+        // eslint-disable-next-line no-console
         console.error('FATAL: Decryption failed. The encryption key may be incorrect or the data corrupted.');
         process.exit(1);
       }
@@ -73,6 +75,7 @@ class EncryptedFileAdapter {
 export const initMemoryContainer = async () => {
   encryptionKey = process.env.VALORA_SECRET_KEY as string;
   if (!encryptionKey) {
+    // eslint-disable-next-line no-console
     console.error(
       'FATAL: VALORA_SECRET_KEY environment variable not set. This is required for encryption.'
     );
@@ -90,6 +93,7 @@ export const initMemoryContainer = async () => {
   await retrievalService.init();
   await taggingService.init();
 
+  // eslint-disable-next-line no-console
   console.log(`🧠 Valora memory container initialized at ${DB_FILE}`);
 };
 
