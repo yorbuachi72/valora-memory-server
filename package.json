@@ -1,0 +1,113 @@
+{
+  "name": "valora",
+  "version": "2.0.0",
+  "main": "build/index.js",
+  "type": "module",
+  "bin": {
+    "valora": "./build/cli/index.js"
+  },
+  "scripts": {
+    "start": "node build/cli/index.js start",
+    "build": "tsc && chmod +x build/cli/index.js",
+    "dev": "tsc -w",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "migrate": "node build/scripts/migrate-to-postgres.js",
+    "db:setup": "node build/scripts/setup-database.js",
+    "db:reset": "node build/scripts/reset-database.js",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:build": "docker-compose build --no-cache",
+    "docs:serve": "npx http-server docs -p 8080",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "security:audit": "npm audit",
+    "security:fix": "npm audit fix",
+    "clean": "rm -rf build dist",
+    "prebuild": "npm run clean"
+  },
+  "files": [
+    "build",
+    "docs",
+    "docker-compose.yml",
+    "Dockerfile",
+    "nginx/valora.conf"
+  ],
+  "keywords": [
+    "memory-container",
+    "mcp-server",
+    "ai-memory",
+    "postgresql",
+    "vector-search",
+    "semantic-search",
+    "multi-tenancy",
+    "jwt-authentication",
+    "api-server",
+    "docker",
+    "typescript",
+    "express",
+    "embeddings",
+    "chat-import",
+    "enterprise"
+  ],
+  "author": "Nkiru Technologies",
+  "license": "MIT",
+  "description": "Valora MCP Server - Enterprise-grade memory container with PostgreSQL backend, vector search, multi-tenancy, and comprehensive monitoring",
+  "homepage": "https://github.com/your-username/valora#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/valora.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/valora/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "dependencies": {
+    "@lancedb/lancedb": "^0.21.0",
+    "@modelcontextprotocol/sdk": "^1.13.0",
+    "@types/bcrypt": "^6.0.0",
+    "@types/helmet": "^0.0.48",
+    "@types/pg": "^8.15.5",
+    "@types/supertest": "^6.0.3",
+    "@types/uuid": "^10.0.0",
+    "@xenova/transformers": "^2.17.2",
+    "bcrypt": "^6.0.0",
+    "commander": "^14.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "lowdb": "^7.0.1",
+    "pg": "^8.16.3",
+    "readline": "^1.3.0",
+    "supertest": "^7.1.4",
+    "uuid": "^11.1.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.0.3",
+    "jest": "^30.0.2",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "test-api-key",
+  "permissions": ["read", "write", "admin"],
+  "expiresAt": null,
+  "metadata": {
+    "createdBy": "test-suite",
+    "purpose": "comprehensive-testing"
+  }
+}

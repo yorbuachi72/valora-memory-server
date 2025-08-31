@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: valora-postgres
+    environment:
+      POSTGRES_DB: valora
+      POSTGRES_USER: valora
+      POSTGRES_PASSWORD: valora_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - valora-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U valora -d valora"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin (Database Management UI)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: valora-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@valora.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - valora-network
+
+  # Redis (Optional - for caching and sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: valora-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - valora-network
+    command: redis-server --appendonly yes
+
+  # Valora Application
+  valora:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: valora-app
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: valora
+      DB_USER: valora
+      DB_PASSWORD: valora_password
+      VALORA_SECRET_KEY: your-super-secret-encryption-key-change-this
+      VALORA_API_KEY: your-production-api-key-change-this
+      VALORA_PORT: 3000
+      VALORA_BRAND: on
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - valora-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: valora-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/valora.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - valora
+    networks:
+      - valora-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  valora-network:
+    driver: bridge

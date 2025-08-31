@@ -1,0 +1,23 @@
+{
+  "Search Valora Memory": {
+    "command": "sh",
+    "args": [
+      "-c",
+      "curl -s -X POST http://localhost:3000/memory/semantic-search -H \"Content-Type: application/json\" -H \"Authorization: Bearer $VALORA_API_KEY\" -d '{\"query\": \"{{query}}\"}'"
+    ]
+  },
+  "Import Chat to Valora": {
+    "command": "sh",
+    "args": [
+      "-c",
+      "echo '📋 Paste your chat conversation below (press Ctrl+D when done):' && echo '==================================================' && valora paste-chat {{format}} && echo '\\n✅ Chat parsed! Use the import command shown above.'"
+    ]
+  },
+  "Export Valora Memory Bundle": {
+    "command": "sh",
+    "args": [
+      "-c",
+      "curl -s -X POST http://localhost:3000/export/bundle -H \"Content-Type: application/json\" -H \"Authorization: Bearer $VALORA_API_KEY\" -d '{\"memoryIds\": [\"{{memoryIds}}\"], \"format\": \"markdown\"}'"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+# Add Test Memory 1 (Authentication)
+curl -X POST http://localhost:3000/memory \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer test-key' \
+-d '{
+  "content": "JWT authentication uses digitally signed tokens for secure user sessions in web applications.",
+  "source": "test",
+  "tags": ["authentication", "security", "jwt"]
+}'
+
+# Add Test Memory 2 (React)
+curl -X POST http://localhost:3000/memory \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer test-key' \
+-d '{
+  "content": "React hooks like useState and useEffect help manage component state and lifecycle in functional components.",
+  "source": "test",
+  "tags": ["react", "javascript", "frontend"]
+}'
+
+# Add Test Memory 3 (Docker)
+curl -X POST http://localhost:3000/memory \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer test-key' \
+-d '{
+  "content": "Docker containers provide isolated environments for applications with consistent deployment across different systems.",
+  "source": "test",
+  "tags": ["docker", "devops", "deployment"]
+}'

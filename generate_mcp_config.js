@@ -1,0 +1,37 @@
+// Generate updated MCP configuration for Cursor.ai
+import fs from 'fs';
+
+const mcpConfig = {
+  "Search Valora Memory": {
+    "command": "sh",
+    "args": [
+      "-c",
+      "curl -s -X POST http://localhost:3000/memory/semantic-search -H \"Content-Type: application/json\" -H \"Authorization: Bearer $VALORA_API_KEY\" -d '{\"query\": \"{{query}}\"}'"
+    ]
+  },
+  "Import Chat to Valora": {
+    "command": "sh", 
+    "args": [
+      "-c",
+      "echo '📋 Paste your chat conversation below (press Ctrl+D when done):' && echo '==================================================' && valora paste-chat {{format}} && echo '\\n✅ Chat parsed! Use the import command shown above.'"
+    ]
+  },
+  "Export Valora Memory Bundle": {
+    "command": "sh",
+    "args": [
+      "-c", 
+      "curl -s -X POST http://localhost:3000/export/bundle -H \"Content-Type: application/json\" -H \"Authorization: Bearer $VALORA_API_KEY\" -d '{\"memoryIds\": [\"{{memoryIds}}\"], \"format\": \"markdown\"}'"
+    ]
+  }
+};
+
+console.log('📋 Updated MCP Configuration for Cursor.ai:');
+console.log('==========================================');
+console.log('Add this to your ~/.cursor/mcp.json file:');
+console.log('');
+console.log(JSON.stringify(mcpConfig, null, 2));
+
+// Also save to a file
+fs.writeFileSync('cursor-mcp-config.json', JSON.stringify(mcpConfig, null, 2));
+console.log('');
+console.log('💾 Configuration also saved to: cursor-mcp-config.json');

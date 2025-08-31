@@ -1,0 +1,75 @@
+import path from 'path';
+import os from 'os';
+import { connect, Connection, Table } from '@lancedb/lancedb';
+import { pipeline, Pipeline } from '@xenova/transformers';
+
+const LANCE_PATH = path.join(os.homedir(), '.valora', 'lancedb');
+
+let db: Connection;
+let table: Table;
+let embedder: Pipeline;
+
+class RetrievalService {
+  async init() {
+    console.log('Initializing Retrieval Service...');
+    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    db = await connect(LANCE_PATH);
+
+    const tables = await db.tableNames();
+    if (!tables.includes('memories')) {
+      // The first dimension of the embedding model output
+      const dim = (await this.generateEmbedding('init'))?.length;
+      if (!dim) throw new Error('Could not determine embedding dimension');
+      
+      const initialData = [{ vector: Array(dim).fill(0), id: 'init' }];
+      table = await db.createTable('memories', initialData);
+      console.log('Created "memories" vector table.');
+    } else {
+      table = await db.openTable('memories');
+      console.log('Opened "memories" vector table.');
+    }
+    console.log('✅ Retrieval Service Initialized.');
+  }
+
+  private async generateEmbedding(text: string): Promise<number[] | null> {
+    if (!embedder) throw new Error('Embedder not initialized.');
+    const result = await embedder(text, { pooling: 'mean', normalize: true });
+    return Array.from(result.data as Float32Array);
+  }
+
+  async addMemory(id: string, content: string): Promise<void> {
+    const vector = await this.generateEmbedding(content);
+    if (!vector) return;
+
+    await table.add([{ id, vector }]);
+    console.log(`Added vector for memory ${id}`);
+  }
+
+  async updateMemory(id: string, content: string): Promise<void> {
+    await this.deleteMemory(id);
+    await this.addMemory(id, content);
+    console.log(`Updated vector for memory ${id}`);
+  }
+
+  async deleteMemory(id: string): Promise<void> {
+    await table.delete(`id = '${id}'`);
+    console.log(`Deleted vector for memory ${id}`);
+  }
+
+  async search(query: string, limit: number = 10): Promise<{ id: string; score: number }[]> {
+    const queryVector = await this.generateEmbedding(query);
+    if (!queryVector) return [];
+
+    const results = await table
+      .search(queryVector)
+      .limit(limit)
+      .execute();
+    
+    return results.map(r => ({
+      id: r.id as string,
+      score: r.score,
+    }));
+  }
+}
+
+export const retrievalService = new RetrievalService(); 
