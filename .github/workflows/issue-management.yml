@@ -297,22 +297,24 @@ jobs:
               prs: issues.filter(i => i.pull_request && new Date(i.created_at) > weekAgo).length
             };
 
-            const summary = `# 📊 Weekly Summary (${weekAgo.toDateString()} - ${today.toDateString()})
-
-## 📈 Activity This Week
-- **Issues Opened:** ${stats.opened}
-- **Issues Closed:** ${stats.closed}
-- **Pull Requests:** ${stats.prs}
-
-## 🏆 Top Contributors
-${issues.slice(0, 5).map(i => \`- @${i.user.login}\`).join('\\n')}
-
-Keep up the great work! 🚀`;
+            const summary = [
+              '# 📊 Weekly Summary (' + weekAgo.toDateString() + ' - ' + today.toDateString() + ')',
+              '',
+              '## 📈 Activity This Week',
+              '- **Issues Opened:** ' + stats.opened,
+              '- **Issues Closed:** ' + stats.closed,
+              '- **Pull Requests:** ' + stats.prs,
+              '',
+              '## 🏆 Top Contributors',
+              issues.slice(0, 5).map(i => '- @' + i.user.login).join('\n'),
+              '',
+              'Keep up the great work! 🚀'
+            ].join('\n');
 
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `📊 Weekly Summary - ${today.toISOString().split('T')[0]}`,
+              title: '📊 Weekly Summary - ' + today.toISOString().split('T')[0],
               body: summary,
               labels: ['weekly-summary', 'automated']
             });
