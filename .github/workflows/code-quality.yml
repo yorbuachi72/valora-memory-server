@@ -44,8 +44,9 @@ jobs:
       - name: 📊 Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          # token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+        continue-on-error: true
 
       - name: 🔒 Run security audit
         run: npm audit --audit-level high
