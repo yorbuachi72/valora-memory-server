@@ -115,7 +115,7 @@ jobs:
 
             // Generate preview URL
             const prNumber = context.issue.number;
-            const previewUrl = `https://yorbuachi72.github.io/valora-memory-server/preview/pr-${prNumber}/`;
+            const previewUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/preview/pr-${prNumber}/`;
 
             // Comment on PR
             github.rest.issues.createComment({

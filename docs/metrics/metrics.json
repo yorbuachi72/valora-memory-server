@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2025-08-31T04:29:01.169Z",
+  "repository": {
+    "name": "Valora",
+    "description": "Enterprise-grade memory container with PostgreSQL backend",
+    "version": "2.0.0",
+    "lastCommit": "ac80b3aa265f6062588eb0c7e8f041e3bac9abc4 🔒 Security: Remove exposed email addresses and add secure reporting methods",
+    "contributors": 1
+  },
+  "codebase": {
+    "totalFiles": 40,
+    "linesOfCode": 6994,
+    "languages": {
+      "typescript": 40,
+      "javascript": 50,
+      "json": 11
+    }
+  },
+  "dependencies": {
+    "total": 22,
+    "dev": 14,
+    "major": 36
+  },
+  "coverage": {
+    "lines": 0,
+    "functions": 0,
+    "branches": 0,
+    "statements": 0
+  }
+}

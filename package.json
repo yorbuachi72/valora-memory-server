@@ -23,6 +23,12 @@
     "docs:serve": "npx http-server docs -p 8080",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "docs:build": "npm run docs:api",
+    "docs:api": "typedoc --out docs/api src/",
+    "metrics:generate": "node scripts/generate-metrics.cjs",
     "security:audit": "npm audit",
     "security:fix": "npm audit fix",
     "clean": "rm -rf build dist",
@@ -106,8 +112,14 @@
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.3",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
     "jest": "^30.0.2",
+    "prettier": "^3.2.5",
     "ts-jest": "^29.4.0",
+    "typedoc": "^0.26.0",
     "typescript": "^5.8.3"
   }
 }

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPointStrategy": "expand",
+  "entryPoints": ["src"],
+  "out": "docs/api",
+  "name": "Valora MCP Server",
+  "includeVersion": true,
+  "exclude": ["**/node_modules/**", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"],
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": false,
+  "hideGenerator": true,
+  "readme": "README.md",
+  "theme": "default",
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "API",
+    "Core",
+    "Database",
+    "Security",
+    "Utils",
+    "*"
+  ],
+  "sort": ["source-order", "required-first", "kind"],
+  "gitRevision": "main",
+  "githubPages": false,
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "searchInComments": true,
+  "cleanOutputDir": true,
+  "validation": {
+    "invalidLink": true,
+    "notDocumented": false
+  }
+}
