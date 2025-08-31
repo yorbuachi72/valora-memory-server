@@ -137,21 +137,19 @@ jobs:
             release_metrics.txt
 
       - name: 🎉 Notify on success
-        if: success()
+        if: success() && env.SLACK_WEBHOOK_URL != null
         uses: 8398a7/action-slack@v3
         with:
           status: success
           text: "🚀 Valora ${{ steps.version.outputs.version }} has been released successfully!"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: env.SLACK_WEBHOOK_URL != null
 
       - name: ⚠️ Notify on failure
-        if: failure()
+        if: failure() && env.SLACK_WEBHOOK_URL != null
         uses: 8398a7/action-slack@v3
         with:
           status: failure
           text: "❌ Release ${{ steps.version.outputs.version }} failed"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: env.SLACK_WEBHOOK_URL != null

@@ -305,7 +305,7 @@ jobs:
 - **Pull Requests:** ${stats.prs}
 
 ## 🏆 Top Contributors
-${issues.slice(0, 5).map(i => `- @${i.user.login}`).join('\n')}
+${issues.slice(0, 5).map(i => \`- @${i.user.login}\`).join('\\n')}
 
 Keep up the great work! 🚀`;
 
