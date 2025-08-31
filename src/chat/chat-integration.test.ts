@@ -3,7 +3,6 @@ import { ChatParser } from './parser.js';
 import { chatImportService } from './service.js';
 import { exportService } from '../export/service.js';
 import { initMemoryContainer, clearAllMemories } from '../storage/container.js';
-import { Memory } from '../types/memory.js';
 
 // Test data
 const chatGPTConversation = `# Example ChatGPT Conversation
@@ -474,8 +473,8 @@ That's really helpful!`;
         messages: [
           {
             participant: 'user',
-            content: 'Hello without timestamp'
-            // timestamp is missing
+            content: 'Hello without timestamp',
+            timestamp: new Date()
           }
         ],
         source: 'test',
