@@ -8,10 +8,24 @@ We take the security of Valora seriously. If you discover a security vulnerabili
 
 **Please DO NOT create a public GitHub issue** for security vulnerabilities.
 
-Instead, report security vulnerabilities by emailing:
-- **security@valora-project.dev** (placeholder - replace with actual email)
-- Include `[SECURITY]` in the subject line
-- Provide detailed information about the vulnerability
+Instead, report security vulnerabilities by:
+
+### Option 1: GitHub Security Advisory (Recommended)
+1. Go to the [Security Advisories](https://github.com/yorbuachi72/Valora/security/advisories/new) page
+2. Click "Report a vulnerability"
+3. Fill out the vulnerability report form
+4. Include `[SECURITY]` in the title
+
+### Option 2: Private Repository Issue
+1. Create a new [private repository issue](https://github.com/yorbuachi72/Valora/issues/new?template=security-report.md)
+2. Use the security report template
+3. Mark the issue as private (if available)
+
+### Option 3: Encrypted Communication
+For highly sensitive issues, you can:
+1. Generate a temporary GPG key pair
+2. Encrypt your report with the project's public key (available in repository)
+3. Submit via GitHub issue with encrypted content
 
 ### ⏰ Response Timeline
 
@@ -69,7 +83,8 @@ When using Valora, please follow these security best practices:
 ### 📞 Contact
 
 For general security questions or concerns:
-- **Email:** support@valora-project.dev
+- **GitHub Discussions:** Use our [Security Discussion](https://github.com/yorbuachi72/Valora/discussions/categories/security) category
+- **GitHub Issues:** Create a [regular issue](https://github.com/yorbuachi72/Valora/issues/new) for non-critical security questions
 - **Documentation:** See our security documentation in `/docs/SECURITY.md`
 
 ---
