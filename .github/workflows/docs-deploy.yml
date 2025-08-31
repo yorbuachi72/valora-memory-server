@@ -1,0 +1,133 @@
+name: 📚 Deploy Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - '.github/workflows/docs-deploy.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build documentation
+        run: npm run docs:build
+
+      - name: 📊 Generate API docs
+        run: |
+          npm run docs:api
+          npx typedoc --out docs/api src/
+
+      - name: 📋 Generate metrics report
+        run: |
+          mkdir -p docs/metrics
+          npm run metrics:generate
+
+      - name: 📤 Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs
+
+  # Deployment job
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Preview job for PRs
+  preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build documentation
+        run: npm run docs:build
+
+      - name: 📊 Generate API docs
+        run: |
+          npm run docs:api
+          npx typedoc --out docs/api src/
+
+      - name: 📋 Generate metrics report
+        run: |
+          mkdir -p docs/metrics
+          npm run metrics:generate
+
+      - name: 💬 Comment PR with preview link
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { exec } = require('child_process');
+            const fs = require('fs');
+
+            // Generate preview URL
+            const prNumber = context.issue.number;
+            const previewUrl = `https://yorbuachi72.github.io/valora-memory-server/preview/pr-${prNumber}/`;
+
+            // Comment on PR
+            github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `📚 **Documentation Preview**\n\nYour documentation changes are ready for preview:\n\n🔗 **Preview URL:** ${previewUrl}\n\nThis preview will be available for the next 7 days.`
+            });
+
+      - name: 📤 Upload preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-preview-${{ github.event.number }}
+          path: ./docs
+          retention-days: 7

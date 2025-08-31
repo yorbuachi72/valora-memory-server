@@ -1,0 +1,157 @@
+name: 🚀 Release Management
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      release_notes:
+        description: 'Custom release notes (optional)'
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run tests
+        run: npm run test
+
+      - name: 🔨 Build application
+        run: npm run build
+
+      - name: 🐳 Build Docker image
+        run: |
+          docker build -t valora:${{ github.sha }} .
+          docker tag valora:${{ github.sha }} valora:latest
+
+      - name: 📋 Generate changelog
+        id: changelog
+        uses: tj-actions/git-cliff@v1
+        with:
+          configuration: cliff.toml
+          args: --verbose --latest --strip header
+        env:
+          OUTPUT: CHANGELOG.md
+
+      - name: 📝 Create release notes
+        id: release-notes
+        run: |
+          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+            echo "notes<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ github.event.inputs.release_notes }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "notes<<EOF" >> $GITHUB_OUTPUT
+            cat CHANGELOG.md >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🏷️ Determine version
+        id: version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "is_tag=true" >> $GITHUB_OUTPUT
+          else
+            VERSION_TYPE="${{ github.event.inputs.version_type || 'patch' }}"
+            echo "version_type=$VERSION_TYPE" >> $GITHUB_OUTPUT
+            echo "is_tag=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🚀 Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ${{ steps.release-notes.outputs.notes }}
+          draft: false
+          prerelease: false
+
+      - name: 📦 Publish to NPM
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: 🐳 Push Docker image
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker tag valora:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/valora:${{ steps.version.outputs.version }}
+          docker tag valora:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/valora:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/valora:${{ steps.version.outputs.version }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/valora:latest
+
+      - name: 📊 Update release metrics
+        run: |
+          echo "Release ${{ steps.version.outputs.version }} created successfully!" >> release_metrics.txt
+          echo "Date: $(date)" >> release_metrics.txt
+          echo "Tag: ${{ github.ref }}" >> release_metrics.txt
+          echo "SHA: ${{ github.sha }}" >> release_metrics.txt
+
+      - name: 📤 Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            build/
+            CHANGELOG.md
+            release_metrics.txt
+
+      - name: 🎉 Notify on success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: "🚀 Valora ${{ steps.version.outputs.version }} has been released successfully!"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.SLACK_WEBHOOK_URL != null
+
+      - name: ⚠️ Notify on failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: "❌ Release ${{ steps.version.outputs.version }} failed"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.SLACK_WEBHOOK_URL != null

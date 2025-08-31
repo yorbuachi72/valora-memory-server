@@ -1,0 +1,286 @@
+name: 🧹 Code Quality & Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run comprehensive checks daily at 6 AM UTC
+    - cron: '0 6 * * *'
+
+jobs:
+  # Code Quality Checks
+  quality-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run ESLint
+        run: npm run lint
+        continue-on-error: false
+
+      - name: 📏 Check code formatting with Prettier
+        run: npm run format:check
+        continue-on-error: false
+
+      - name: 🧪 Run tests with coverage
+        run: npm run test:coverage
+
+      - name: 📊 Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+      - name: 🔒 Run security audit
+        run: npm audit --audit-level high
+        continue-on-error: true
+
+      - name: 📋 TypeScript type checking
+        run: npm run type-check
+
+      - name: 🏗️ Build verification
+        run: npm run build
+
+  # Security Scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: 📤 Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: 🛡️ Run CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+          queries: security-and-quality
+
+      - name: 🔍 CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      - name: 🔒 Security audit with npm audit
+        run: |
+          npm audit --audit-level moderate --json > audit-results.json || true
+          if [ -f audit-results.json ]; then
+            cat audit-results.json | jq -r '.vulnerabilities | to_entries[] | "\(.key): \(.value.severity) - \(.value.title)"' >> security-report.txt || true
+          fi
+
+      - name: 📊 Generate security report
+        run: |
+          echo "## 🔒 Security Scan Report" >> security-report.md
+          echo "" >> security-report.md
+          echo "**Scan Date:** $(date)" >> security-report.md
+          echo "" >> security-report.md
+
+          if [ -f security-report.txt ] && [ -s security-report.txt ]; then
+            echo "### 🚨 Vulnerabilities Found" >> security-report.md
+            echo "" >> security-report.md
+            cat security-report.txt >> security-report.md
+            echo "" >> security-report.md
+          else
+            echo "### ✅ No Critical Vulnerabilities Found" >> security-report.md
+            echo "" >> security-report.md
+          fi
+
+          echo "### 📊 Scan Summary" >> security-report.md
+          echo "- **CodeQL:** $([ -f codeql-results.sarif ] && echo "✅ Completed" || echo "❌ Failed")" >> security-report.md
+          echo "- **Trivy:** $([ -f trivy-results.sarif ] && echo "✅ Completed" || echo "❌ Failed")" >> security-report.md
+          echo "- **NPM Audit:** $([ -f audit-results.json ] && echo "✅ Completed" || echo "❌ Failed")" >> security-report.md
+
+  # Performance Monitoring
+  performance-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build for production
+        run: npm run build
+
+      - name: 📊 Analyze bundle size
+        run: |
+          npx webpack-bundle-analyzer build/static/js/*.js --mode static --report bundle-report.html || true
+
+      - name: ⚡ Lighthouse performance audit
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            file://${{ github.workspace }}/docs/index.html
+          configPath: .github/lighthouse-config.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: 📈 Performance metrics
+        run: |
+          echo "## 📊 Performance Metrics" >> performance-report.md
+          echo "" >> performance-report.md
+          echo "**Test Date:** $(date)" >> performance-report.md
+          echo "" >> performance-report.md
+
+          # Bundle size analysis
+          if [ -d "build" ]; then
+            BUNDLE_SIZE=$(du -sh build | cut -f1)
+            echo "### 📦 Bundle Size" >> performance-report.md
+            echo "- **Total Size:** $BUNDLE_SIZE" >> performance-report.md
+            echo "" >> performance-report.md
+          fi
+
+          # Lighthouse scores will be in artifacts
+          echo "### 🏮 Lighthouse Scores" >> performance-report.md
+          echo "See workflow artifacts for detailed Lighthouse reports." >> performance-report.md
+
+  # Dependency Analysis
+  dependency-analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 📊 Analyze dependencies
+        run: |
+          echo "## 📦 Dependency Analysis" >> dependency-report.md
+          echo "" >> dependency-report.md
+          echo "**Analysis Date:** $(date)" >> dependency-report.md
+          echo "" >> dependency-report.md
+
+          echo "### 📊 Package Statistics" >> dependency-report.md
+          echo "- **Total Dependencies:** $(npm ls --depth=0 | grep -c "^[├└]─")" >> dependency-report.md
+          echo "- **Dev Dependencies:** $(npm ls --depth=0 --dev | grep -c "^[├└]─")" >> dependency-report.md
+          echo "" >> dependency-report.md
+
+          echo "### 📋 Outdated Packages" >> dependency-report.md
+          echo "\`\`\`" >> dependency-report.md
+          npm outdated || echo "All packages are up to date!" >> dependency-report.md
+          echo "\`\`\`" >> dependency-report.md
+          echo "" >> dependency-report.md
+
+          echo "### 📏 Package Sizes" >> dependency-report.md
+          echo "\`\`\`" >> dependency-report.md
+          npx package-size || echo "Package size analysis not available" >> dependency-report.md
+          echo "\`\`\`" >> dependency-report.md
+
+      - name: 📤 Upload analysis reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-reports
+          path: |
+            security-report.md
+            performance-report.md
+            dependency-report.md
+            bundle-report.html
+
+  # Quality Gate
+  quality-gate:
+    runs-on: ubuntu-latest
+    needs: [quality-check, security-scan, performance-check]
+    if: always()
+
+    steps:
+      - name: 🎯 Quality Gate Check
+        run: |
+          # Check if all required jobs passed
+          if [ "${{ needs.quality-check.result }}" != "success" ]; then
+            echo "❌ Code quality checks failed"
+            exit 1
+          fi
+
+          if [ "${{ needs.security-scan.result }}" != "success" ]; then
+            echo "❌ Security scan failed"
+            exit 1
+          fi
+
+          if [ "${{ needs.performance-check.result }}" != "success" ]; then
+            echo "⚠️ Performance checks failed (non-blocking)"
+          fi
+
+          echo "✅ All quality gates passed!"
+
+      - name: 📊 Generate quality summary
+        run: |
+          echo "## 🧹 Code Quality Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Checks Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Linting:** ${{ needs.quality-check.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **TypeScript:** ${{ needs.quality-check.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests:** ${{ needs.quality-check.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security:** ${{ needs.security-scan.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Performance:** ${{ needs.performance-check.result == 'success' && '✅ Passed' || '⚠️ Warning' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.quality-check.result }}" == "success" ] && [ "${{ needs.security-scan.result }}" == "success" ]; then
+            echo "## 🎉 Quality Gate: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "All quality checks have passed successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Quality Gate: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "Some quality checks failed. Please review the workflow logs." >> $GITHUB_STEP_SUMMARY
+          fi

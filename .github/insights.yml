@@ -1,0 +1,38 @@
+# GitHub Repository Insights Configuration
+# Enables advanced analytics and metrics tracking
+
+# Repository Health Metrics
+repository_health:
+  enabled: true
+  metrics:
+    - code_frequency
+    - commit_activity
+    - contributor_stats
+    - participation
+    - traffic
+
+# Code Quality Insights
+code_quality:
+  enabled: true
+  tools:
+    - sonarqube
+    - codeclimate
+    - codacy
+
+# Performance Monitoring
+performance:
+  enabled: true
+  metrics:
+    - build_time
+    - test_coverage
+    - dependency_health
+    - security_vulnerabilities
+
+# Community Analytics
+community:
+  enabled: true
+  metrics:
+    - issue_response_time
+    - pr_merge_time
+    - contributor_growth
+    - engagement_rate

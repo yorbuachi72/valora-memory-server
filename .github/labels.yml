@@ -1,0 +1,238 @@
+# Repository Labels Configuration
+# This file defines all labels used in the repository
+# Apply with: gh label clone <repo> --force
+
+labels:
+  # Priority Labels
+  - name: "priority/critical"
+    color: "b60205"
+    description: "Critical priority - needs immediate attention"
+
+  - name: "priority/high"
+    color: "d73a49"
+    description: "High priority - should be addressed soon"
+
+  - name: "priority/medium"
+    color: "f9c513"
+    description: "Medium priority - address when possible"
+
+  - name: "priority/low"
+    color: "0e8a16"
+    description: "Low priority - nice to have"
+
+  # Size Labels
+  - name: "size/XS"
+    color: "009900"
+    description: "Extra small change (< 10 lines)"
+
+  - name: "size/S"
+    color: "00cc00"
+    description: "Small change (10-49 lines)"
+
+  - name: "size/M"
+    color: "ffcc00"
+    description: "Medium change (50-199 lines)"
+
+  - name: "size/L"
+    color: "ff6600"
+    description: "Large change (200-999 lines)"
+
+  - name: "size/XL"
+    color: "cc0000"
+    description: "Extra large change (1000+ lines)"
+
+  # Type Labels
+  - name: "bug"
+    color: "d73a49"
+    description: "Something isn't working"
+
+  - name: "enhancement"
+    color: "a2eeef"
+    description: "New feature or request"
+
+  - name: "feature-request"
+    color: "84b6eb"
+    description: "Request for new feature"
+
+  - name: "documentation"
+    color: "0075ca"
+    description: "Documentation improvements"
+
+  - name: "question"
+    color: "d876e3"
+    description: "Question or discussion"
+
+  - name: "help"
+    color: "d876e3"
+    description: "Request for help"
+
+  # Status Labels
+  - name: "triage"
+    color: "fbca04"
+    description: "Needs triage"
+
+  - name: "investigating"
+    color: "fbca04"
+    description: "Under investigation"
+
+  - name: "confirmed"
+    color: "fbca04"
+    description: "Issue confirmed"
+
+  - name: "in-progress"
+    color: "0052cc"
+    description: "Work in progress"
+
+  - name: "blocked"
+    color: "bfdadc"
+    description: "Blocked by something"
+
+  - name: "review"
+    color: "fbca04"
+    description: "Ready for review"
+
+  - name: "approved"
+    color: "0e8a16"
+    description: "Approved for merge"
+
+  # Area Labels
+  - name: "area/api"
+    color: "0052cc"
+    description: "API related"
+
+  - name: "area/cli"
+    color: "0052cc"
+    description: "CLI related"
+
+  - name: "area/security"
+    color: "b60205"
+    description: "Security related"
+
+  - name: "area/storage"
+    color: "0052cc"
+    description: "Storage related"
+
+  - name: "area/search"
+    color: "0052cc"
+    description: "Search functionality"
+
+  - name: "area/ui"
+    color: "0052cc"
+    description: "User interface"
+
+  - name: "area/docker"
+    color: "0052cc"
+    description: "Docker related"
+
+  - name: "area/ci"
+    color: "0052cc"
+    description: "CI/CD related"
+
+  # Special Labels
+  - name: "good-first-issue"
+    color: "7057ff"
+    description: "Good for newcomers"
+
+  - name: "help-wanted"
+    color: "008672"
+    description: "Extra attention is needed"
+
+  - name: "stale"
+    color: "ffffff"
+    description: "Marked as stale"
+
+  - name: "duplicate"
+    color: "cfd3d7"
+    description: "This issue or pull request already exists"
+
+  - name: "wontfix"
+    color: "ffffff"
+    description: "This will not be worked on"
+
+  - name: "invalid"
+    color: "e4e669"
+    description: "This doesn't seem right"
+
+  # Automated Labels
+  - name: "automated"
+    color: "ededed"
+    description: "Created by automation"
+
+  - name: "weekly-summary"
+    color: "ededed"
+    description: "Weekly activity summary"
+
+  # Dependency Labels
+  - name: "dependencies"
+    color: "0366d6"
+    description: "Pull requests that update a dependency file"
+
+  - name: "security"
+    color: "b60205"
+    description: "Security vulnerability or update"
+
+  # Performance Labels
+  - name: "performance"
+    color: "fbca04"
+    description: "Performance related"
+
+  - name: "optimization"
+    color: "fbca04"
+    description: "Code optimization"
+
+  # Testing Labels
+  - name: "testing"
+    color: "fbca04"
+    description: "Testing related"
+
+  - name: "tests"
+    color: "fbca04"
+    description: "Needs tests"
+
+  # Compatibility Labels
+  - name: "breaking-change"
+    color: "b60205"
+    description: "Introduces breaking changes"
+
+  - name: "backwards-compatible"
+    color: "0e8a16"
+    description: "Backwards compatible change"
+
+  # Platform Labels
+  - name: "linux"
+    color: "ededed"
+    description: "Linux specific"
+
+  - name: "macos"
+    color: "ededed"
+    description: "macOS specific"
+
+  - name: "windows"
+    color: "ededed"
+    description: "Windows specific"
+
+  # Language Labels
+  - name: "javascript"
+    color: "f1e05a"
+    description: "JavaScript code"
+
+  - name: "typescript"
+    color: "2b7489"
+    description: "TypeScript code"
+
+  - name: "docker"
+    color: "2496ed"
+    description: "Docker related"
+
+  # Project Labels
+  - name: "epic"
+    color: "3e4b9e"
+    description: "Large feature or initiative"
+
+  - name: "spike"
+    color: "8e44ad"
+    description: "Research or investigation task"
+
+  - name: "chore"
+    color: "fef2c0"
+    description: "Maintenance task"

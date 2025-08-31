@@ -1,0 +1,204 @@
+# GitHub Project Boards Configuration
+# This file defines project board templates and automation
+
+projects:
+  # Main Development Board
+  valora-development:
+    name: "🏗️ Valora Development"
+    description: "Main development board for tracking Valora features and tasks"
+    columns:
+      - name: "📋 Backlog"
+        description: "Ideas and feature requests"
+        automation:
+          - "move_issues_opened"
+          - "move_prs_opened"
+
+      - name: "🔄 Ready"
+        description: "Ready for development"
+        automation:
+          - "move_issues_labeled:ready"
+          - "move_prs_labeled:ready"
+
+      - name: "⚡ In Progress"
+        description: "Currently being worked on"
+        automation:
+          - "move_issues_labeled:in-progress"
+          - "move_prs_labeled:in-progress"
+
+      - name: "👀 In Review"
+        description: "Ready for code review"
+        automation:
+          - "move_prs_labeled:review"
+
+      - name: "✅ Done"
+        description: "Completed and merged"
+        automation:
+          - "move_issues_closed"
+          - "move_prs_merged"
+
+  # Security Board
+  security-monitoring:
+    name: "🔒 Security Monitoring"
+    description: "Track security vulnerabilities and updates"
+    columns:
+      - name: "🔍 Detected"
+        description: "Security issues detected"
+        automation:
+          - "move_issues_labeled:security"
+
+      - name: "⚠️ Investigating"
+        description: "Under security review"
+        automation:
+          - "move_issues_labeled:investigating"
+
+      - name: "🛡️ Mitigating"
+        description: "Implementing security fixes"
+        automation:
+          - "move_issues_assigned"
+
+      - name: "✅ Resolved"
+        description: "Security issues resolved"
+        automation:
+          - "move_issues_closed"
+
+  # Release Planning Board
+  release-planning:
+    name: "🚀 Release Planning"
+    description: "Plan and track upcoming releases"
+    columns:
+      - name: "📝 Planning"
+        description: "Release planning phase"
+        automation: []
+
+      - name: "🏗️ Development"
+        description: "Features in development"
+        automation:
+          - "move_issues_labeled:in-progress"
+
+      - name: "🧪 Testing"
+        description: "Quality assurance and testing"
+        automation:
+          - "move_issues_labeled:testing"
+
+      - name: "📦 Packaging"
+        description: "Release preparation"
+        automation: []
+
+      - name: "🚀 Released"
+        description: "Successfully released"
+        automation:
+          - "move_issues_labeled:released"
+
+  # Bug Tracking Board
+  bug-tracking:
+    name: "🐛 Bug Tracking"
+    description: "Track and prioritize bug fixes"
+    columns:
+      - name: "🐛 Reported"
+        description: "New bug reports"
+        automation:
+          - "move_issues_labeled:bug"
+
+      - name: "🔍 Triaged"
+        description: "Bugs that need investigation"
+        automation:
+          - "move_issues_labeled:triage"
+
+      - name: "✅ Confirmed"
+        description: "Bugs confirmed and prioritized"
+        automation:
+          - "move_issues_labeled:confirmed"
+
+      - name: "🔧 Fixing"
+        description: "Bugs being fixed"
+        automation:
+          - "move_issues_labeled:in-progress"
+
+      - name: "🧪 Testing Fix"
+        description: "Testing bug fixes"
+        automation:
+          - "move_issues_labeled:testing"
+
+      - name: "🎉 Fixed"
+        description: "Bugs successfully fixed"
+        automation:
+          - "move_issues_closed"
+
+# Issue Templates for Project Cards
+card_templates:
+  feature_request:
+    title: "Feature: {title}"
+    body: |
+      ## 🎯 Feature Request
+      **Description:** {body}
+
+      **Priority:** {priority}
+      **Estimated Effort:** {effort}
+
+      ### Acceptance Criteria
+      - [ ] Feature implemented
+      - [ ] Tests added
+      - [ ] Documentation updated
+      - [ ] Reviewed and approved
+
+  bug_report:
+    title: "Bug: {title}"
+    body: |
+      ## 🐛 Bug Report
+      **Description:** {body}
+
+      **Severity:** {severity}
+      **Reproduction Steps:** {steps}
+
+      ### Investigation
+      - [ ] Reproduce issue
+      - [ ] Identify root cause
+      - [ ] Propose solution
+      - [ ] Implement fix
+
+  security_issue:
+    title: "Security: {title}"
+    body: |
+      ## 🔒 Security Issue
+      **Description:** {body}
+
+      **Severity:** {severity}
+      **Impact:** {impact}
+
+      ### Security Assessment
+      - [ ] Assess vulnerability
+      - [ ] Determine risk level
+      - [ ] Develop mitigation plan
+      - [ ] Implement security fix
+      - [ ] Security review completed
+
+# Automation Rules
+automation_rules:
+  # Auto-assign high priority issues
+  high_priority_assignment:
+    trigger: "issues_labeled"
+    condition: "label == 'priority/high' || label == 'priority/critical'"
+    action: "assign_reviewers"
+    reviewers: ["yorbuachi72"]
+
+  # Auto-label security-related PRs
+  security_pr_labeling:
+    trigger: "pull_request_opened"
+    condition: "files_contain('src/security/') || files_contain('src/utils/encryption')"
+    action: "add_labels"
+    labels: ["security", "area/security"]
+
+  # Stale issue management
+  stale_issue_management:
+    trigger: "schedule_weekly"
+    condition: "no_activity_for(30)"
+    action: "add_labels"
+    labels: ["stale"]
+    comment: "This issue has been inactive for 30 days. It will be closed in 7 days if there's no activity."
+
+  # Welcome new contributors
+  welcome_contributors:
+    trigger: "issues_opened"
+    condition: "author_association == 'FIRST_TIME_CONTRIBUTOR'"
+    action: "create_comment"
+    comment_file: ".github/templates/welcome-comment.md"

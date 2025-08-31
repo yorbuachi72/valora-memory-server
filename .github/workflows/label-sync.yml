@@ -1,0 +1,82 @@
+name: 🔄 Sync Repository Labels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/labels.yml'
+      - '.github/workflows/label-sync.yml'
+  workflow_dispatch:
+
+jobs:
+  sync-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh
+
+      - name: 🔑 Authenticate GitHub CLI
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
+
+      - name: 📋 Sync labels from configuration
+        run: |
+          # Read the labels configuration
+          labels=$(yq -o=json '.labels[]' .github/labels.yml)
+
+          # Create or update each label
+          echo "$labels" | jq -c '.' | while read -r label; do
+            name=$(echo "$label" | jq -r '.name')
+            color=$(echo "$label" | jq -r '.color')
+            description=$(echo "$label" | jq -r '.description')
+
+            echo "Processing label: $name"
+
+            # Check if label exists
+            if gh label list | grep -q "^$name"; then
+              # Update existing label
+              gh label edit "$name" --color "$color" --description "$description"
+              echo "✅ Updated label: $name"
+            else
+              # Create new label
+              gh label create "$name" --color "$color" --description "$description"
+              echo "✨ Created label: $name"
+            fi
+          done
+
+      - name: 📊 Report label synchronization
+        run: |
+          echo "🏷️ **Label Synchronization Complete**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Labels:** $(gh label list --json name | jq '. | length')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Label Categories:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Priority: $(gh label list --json name | jq '[.[] | select(.name | startswith("priority/"))] | length')" >> $GITHUB_STEP_SUMMARY
+          echo "- Size: $(gh label list --json name | jq '[.[] | select(.name | startswith("size/"))] | length')" >> $GITHUB_STEP_SUMMARY
+          echo "- Area: $(gh label list --json name | jq '[.[] | select(.name | startswith("area/"))] | length')" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: $(gh label list --json name | jq '[.[] | select(.name | contains("/")) | select(.name | startswith("triage") or startswith("investigating") or startswith("confirmed") or startswith("in-progress") or startswith("blocked") or startswith("review") or startswith("approved"))] | length')" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🎉 Success notification
+        if: success()
+        run: |
+          echo "✅ **Repository Labels Successfully Synchronized!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All labels from \`.github/labels.yml\` have been applied to the repository." >> $GITHUB_STEP_SUMMARY
+
+      - name: ❌ Failure notification
+        if: failure()
+        run: |
+          echo "❌ **Label Synchronization Failed**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please check the workflow logs for details." >> $GITHUB_STEP_SUMMARY

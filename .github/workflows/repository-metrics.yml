@@ -1,0 +1,116 @@
+name: Repository Metrics & Insights
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repository-metrics.yml'
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      repository-projects: read
+
+    steps:
+      - name: 📊 Generate Repository Metrics
+        uses: lowlighter/metrics@latest
+        with:
+          filename: metrics.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: ""
+          plugin_activity: yes
+          plugin_activity_limit: 5
+          plugin_activity_days: 14
+          plugin_activity_filter: all
+          plugin_activity_visibility: all
+          plugin_contributors: yes
+          plugin_contributors_categories: |
+            +documentation
+            +code
+            +issues
+            +pull-requests
+          plugin_followup: yes
+          plugin_followup_sections: repositories, user
+          plugin_habits: yes
+          plugin_habits_from: 200
+          plugin_habits_days: 14
+          plugin_habits_facts: yes
+          plugin_habits_charts: yes
+          plugin_habits_trim: yes
+          plugin_languages: yes
+          plugin_languages_analysis_timeout: 15
+          plugin_languages_categories: markup, programming, data
+          plugin_languages_colors: github
+          plugin_languages_limit: 8
+          plugin_languages_recent_categories: markup, programming, data
+          plugin_languages_recent_days: 14
+          plugin_languages_recent_load: 300
+          plugin_languages_sections: most-used
+          plugin_languages_threshold: 0%
+          plugin_lines: yes
+          plugin_lines_history_limit: 1
+          plugin_lines_repositories_limit: 4
+          plugin_lines_sections: base, repositories
+          plugin_notable: yes
+          plugin_notable_from: organization
+          plugin_notable_indepth: yes
+          plugin_notable_repositories: yes
+          plugin_notable_types: commit
+          plugin_pagespeed: yes
+          plugin_pagespeed_detailed: yes
+          plugin_pagespeed_screenshot: yes
+          plugin_pagespeed_token: ${{ secrets.PAGESPEED_TOKEN }}
+          plugin_projects: yes
+          plugin_projects_descriptions: yes
+          plugin_projects_limit: 4
+          plugin_reactions: yes
+          plugin_reactions_display: absolute
+          plugin_reactions_limit: none
+          plugin_reactions_limit_discussions: 100
+          plugin_reactions_limit_discussions_comments: 100
+          plugin_reactions_limit_issues: 100
+          plugin_reactions_limit_pr: 100
+          plugin_reactions_limit_releases: 100
+          plugin_stars: yes
+          plugin_stars_limit: 4
+          plugin_stargazers: yes
+          plugin_stargazers_charts: yes
+          plugin_stargazers_charts_type: chartist
+          plugin_stargazers_days: 365
+          plugin_traffic: yes
+          plugin_traffic_detailed: yes
+          plugin_topics: yes
+          plugin_topics_limit: 15
+          plugin_topics_mode: starred
+          plugin_topics_sort: stars
+          plugin_wakatime: yes
+          plugin_wakatime_days: 7
+          plugin_wakatime_limit: 5
+          plugin_wakatime_sections: time, projects, projects-graphs, languages, languages-graphs, editors, editors-graphs, os, os-graphs
+          plugin_wakatime_token: ${{ secrets.WAKATIME_TOKEN }}
+          plugin_wakatime_user: .user.login
+
+      - name: 📁 Create metrics directory
+        run: mkdir -p docs/metrics
+
+      - name: 📤 Upload metrics to repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-metrics
+          path: metrics.svg
+
+      - name: 💾 Commit metrics to repository
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'metrics.svg'
+          message: '📊 Update repository metrics [automated]'
+          author_name: 'GitHub Actions'
+          author_email: 'actions@github.com'

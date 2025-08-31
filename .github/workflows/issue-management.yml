@@ -1,0 +1,318 @@
+name: 📋 Issue & PR Management
+
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled, closed]
+  pull_request:
+    types: [opened, edited, labeled, unlabeled, closed, ready_for_review]
+  issue_comment:
+    types: [created]
+  schedule:
+    # Run weekly maintenance on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+jobs:
+  issue-management:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🏷️ Auto-label issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            if (!issue) return;
+
+            const title = issue.title.toLowerCase();
+            const body = issue.body?.toLowerCase() || '';
+
+            const labels = [];
+
+            // Bug-related labels
+            if (title.includes('bug') || title.includes('fix') || body.includes('error') || body.includes('fail')) {
+              labels.push('bug');
+              labels.push('triage');
+            }
+
+            // Feature-related labels
+            if (title.includes('feat') || title.includes('feature') || title.includes('add') || title.includes('new')) {
+              labels.push('enhancement');
+              labels.push('feature-request');
+            }
+
+            // Security-related labels
+            if (body.includes('security') || body.includes('vulnerability') || body.includes('exploit')) {
+              labels.push('security');
+              labels.push('priority-high');
+            }
+
+            // Documentation labels
+            if (title.includes('doc') || body.includes('documentation') || body.includes('readme')) {
+              labels.push('documentation');
+            }
+
+            // Performance labels
+            if (body.includes('performance') || body.includes('slow') || body.includes('optimization')) {
+              labels.push('performance');
+            }
+
+            // Add labels if any were identified
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                issue_number: issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: labels
+              });
+            }
+
+      - name: 👋 Welcome new contributors
+        uses: actions/github-script@v7
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const isFirstTime = issue.author_association === 'FIRST_TIME_CONTRIBUTOR';
+
+            if (isFirstTime) {
+              await github.rest.issues.createComment({
+                issue_number: issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `👋 **Welcome to Valora!**\n\nThank you for your first contribution! We're excited to have you here.\n\n**What happens next?**\n- A maintainer will review your issue/PR shortly\n- We'll assign appropriate labels and priority\n- For bugs: We'll try to reproduce and provide a fix timeline\n- For features: We'll discuss feasibility and implementation approach\n\n**Need help?**\n- Check our [Contributing Guide](https://github.com/yorbuachi72/valora-memory-server/blob/main/CONTRIBUTING.md)\n- Join our discussions for questions\n\nWe appreciate your help in making Valora better! 🚀`
+              });
+            }
+
+      - name: 🔄 Assign to project board
+        uses: actions/github-script@v7
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        with:
+          script: |
+            const issue = context.payload.issue;
+
+            // Add to project board
+            try {
+              const projectResponse = await github.rest.projects.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open'
+              });
+
+              if (projectResponse.data.length > 0) {
+                const project = projectResponse.data[0]; // Use first project
+
+                // Get project columns
+                const columnsResponse = await github.rest.projects.listColumns({
+                  project_id: project.id
+                });
+
+                if (columnsResponse.data.length > 0) {
+                  const todoColumn = columnsResponse.data.find(col =>
+                    col.name.toLowerCase().includes('todo') ||
+                    col.name.toLowerCase().includes('backlog')
+                  ) || columnsResponse.data[0];
+
+                  // Create project card
+                  await github.rest.projects.createCard({
+                    column_id: todoColumn.id,
+                    content_id: issue.id,
+                    content_type: 'Issue'
+                  });
+                }
+              }
+            } catch (error) {
+              console.log('Could not add to project board:', error.message);
+            }
+
+      - name: 🎯 Auto-assign reviewers for PRs
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            // Auto-assign reviewers based on changed files
+            const filesResponse = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+
+            const reviewers = [];
+            const files = filesResponse.data.map(f => f.filename);
+
+            // Assign based on file paths
+            if (files.some(f => f.startsWith('src/security/') || f.includes('encryption'))) {
+              reviewers.push('yorbuachi72'); // Security expert
+            }
+
+            if (files.some(f => f.startsWith('src/api/'))) {
+              reviewers.push('yorbuachi72'); // API expert
+            }
+
+            if (files.some(f => f.startsWith('docs/') || f.includes('README'))) {
+              reviewers.push('yorbuachi72'); // Documentation maintainer
+            }
+
+            if (files.some(f => f.includes('Dockerfile') || f.includes('docker'))) {
+              reviewers.push('yorbuachi72'); // DevOps expert
+            }
+
+            // Remove duplicates
+            const uniqueReviewers = [...new Set(reviewers)];
+
+            if (uniqueReviewers.length > 0) {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                reviewers: uniqueReviewers
+              });
+            }
+
+      - name: 📊 Update PR size labels
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            // Get PR size based on additions + deletions
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+            const totalChanges = additions + deletions;
+
+            let sizeLabel = '';
+            if (totalChanges < 10) sizeLabel = 'size/XS';
+            else if (totalChanges < 50) sizeLabel = 'size/S';
+            else if (totalChanges < 200) sizeLabel = 'size/M';
+            else if (totalChanges < 1000) sizeLabel = 'size/L';
+            else sizeLabel = 'size/XL';
+
+            // Remove existing size labels
+            const labels = pr.labels.map(l => l.name);
+            const sizeLabels = labels.filter(l => l.startsWith('size/'));
+
+            for (const label of sizeLabels) {
+              await github.rest.issues.removeLabel({
+                issue_number: pr.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label
+              });
+            }
+
+            // Add new size label
+            await github.rest.issues.addLabels({
+              issue_number: pr.number,
+              owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: [sizeLabel]
+              });
+
+      - name: 📝 Auto-close stale issues
+        uses: actions/github-script@v7
+        if: github.event_name == 'schedule' && github.event.repository.archived == false
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'stale'
+            });
+
+            for (const issue of issues) {
+              // Check if issue has been stale for more than 30 days
+              const staleDate = new Date();
+              staleDate.setDate(staleDate.getDate() - 30);
+
+              if (new Date(issue.updated_at) < staleDate) {
+                await github.rest.issues.createComment({
+                  issue_number: issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `This issue has been automatically closed due to inactivity. If you're still experiencing this issue, please reopen it with additional details.`
+                });
+
+                await github.rest.issues.update({
+                  issue_number: issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'closed'
+                });
+              }
+            }
+
+      - name: 🎉 Celebrate milestones
+        uses: actions/github-script@v7
+        if: github.event_name == 'issues' && github.event.action == 'closed'
+        with:
+          script: |
+            const issue = context.payload.issue;
+
+            if (issue.number % 10 === 0) {
+              await github.rest.issues.createComment({
+                issue_number: issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `🎉 **Milestone Alert!**\n\nThis is issue/PR #${issue.number}! Keep up the great work on Valora! 🚀`
+              });
+            }
+
+  # Scheduled maintenance tasks
+  maintenance:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: 📅 Weekly maintenance
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Create weekly summary issue
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              since: weekAgo.toISOString()
+            });
+
+            const stats = {
+              opened: issues.filter(i => i.state === 'open' && new Date(i.created_at) > weekAgo).length,
+              closed: issues.filter(i => i.state === 'closed' && new Date(i.closed_at) > weekAgo).length,
+              prs: issues.filter(i => i.pull_request && new Date(i.created_at) > weekAgo).length
+            };
+
+            const summary = `# 📊 Weekly Summary (${weekAgo.toDateString()} - ${today.toDateString()})
+
+## 📈 Activity This Week
+- **Issues Opened:** ${stats.opened}
+- **Issues Closed:** ${stats.closed}
+- **Pull Requests:** ${stats.prs}
+
+## 🏆 Top Contributors
+${issues.slice(0, 5).map(i => `- @${i.user.login}`).join('\n')}
+
+Keep up the great work! 🚀`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `📊 Weekly Summary - ${today.toISOString().split('T')[0]}`,
+              body: summary,
+              labels: ['weekly-summary', 'automated']
+            });
