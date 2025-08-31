@@ -41,17 +41,7 @@ jobs:
       - name: 🧪 Run tests with coverage
         run: npm run test:coverage
 
-      - name: 🔍 Check for Codecov token
-        id: codecov-check
-        run: |
-          if [ -n "${{ secrets.CODECOV_TOKEN }}" ]; then
-            echo "has_token=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_token=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: 📊 Upload coverage to Codecov
-        if: steps.codecov-check.outputs.has_token == 'true'
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
