@@ -14,7 +14,7 @@ class ChatImportService {
         id: randomUUID(),
         content: message.content,
         source: chatData.source,
-        timestamp: message.timestamp,
+        timestamp: message.timestamp || new Date(),
         version: 1,
         tags: [...(chatData.tags || []), 'chat', 'conversation'],
         metadata: {
