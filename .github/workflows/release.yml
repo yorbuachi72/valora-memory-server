@@ -105,14 +105,32 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: 🔍 Check for NPM token
+        id: npm-check
+        run: |
+          if [ -n "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "has_token=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_token=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: 📦 Publish to NPM
-        if: startsWith(github.ref, 'refs/tags/v') && env.NPM_TOKEN != ''
+        if: startsWith(github.ref, 'refs/tags/v') && steps.npm-check.outputs.has_token == 'true'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: 🔍 Check for Docker credentials
+        id: docker-check
+        run: |
+          if [ -n "${{ secrets.DOCKER_USERNAME }}" ] && [ -n "${{ secrets.DOCKER_PASSWORD }}" ]; then
+            echo "has_credentials=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_credentials=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: 🐳 Push Docker image
-        if: startsWith(github.ref, 'refs/tags/v') && env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != ''
+        if: startsWith(github.ref, 'refs/tags/v') && steps.docker-check.outputs.has_credentials == 'true'
         run: |
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           docker tag valora:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/valora:${{ steps.version.outputs.version }}
