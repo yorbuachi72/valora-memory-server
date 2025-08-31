@@ -15,12 +15,16 @@ module.exports = {
         target: 'ES2022',
       },
     }],
+    '^.+\\.js$': ['ts-jest', {
+      useESM: true,
+    }],
   },
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^lowdb$': '<rootDir>/src/__mocks__/lowdb.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(supertest)/)',
+    'node_modules/(?!(supertest|lowdb|@xenova|@huggingface)/)',
   ],
   testMatch: [
     '<rootDir>/src/**/*.test.ts',

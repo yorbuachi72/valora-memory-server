@@ -185,4 +185,12 @@ export const searchMemoriesByType = async (contentType: string): Promise<Memory[
 
 export const getConversationContext = async (conversationId: string): Promise<Memory[]> => {
   return getMemoriesByConversation(conversationId);
+};
+
+export const clearAllMemories = async (): Promise<void> => {
+  await db.read();
+  if (db.data) {
+    db.data.memories = [];
+    await db.write();
+  }
 }; 
